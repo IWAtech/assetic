@@ -68,7 +68,7 @@ class Parser
                 list ($token, $content, $n) = $comment;
                 $content = ltrim(substr($content, strlen($token)));
 
-                if (self::T_DIRECTIVE === $content[0]) {
+                if (!empty($content) and self::T_DIRECTIVE === $content[0]) {
                     $tokens[] = array(self::T_DIRECTIVE, trim(substr($content, 1)), $n);
                 } else {
                     $tokens[] = $comment;
