@@ -34,8 +34,9 @@ class Parser
         $lineNumber = 1;
 
         do {
-            $pos = strpos($source, "\n");
-            $line = trim(substr($source, 0, $pos));
+            $pos  = strpos($source, "\n");
+            $line = (false === $pos) ? substr($source, 0) : substr($source, 0, $pos);
+            $line = trim($line);
 
             if ('' === $line) {
                 // no op
@@ -78,10 +79,11 @@ class Parser
 
             // Break if no lines remain
             if (false === $pos) {
+                $source = '';
                 break;
             }
 
-            // Break if there isn't any source to process
+            // Break if there isn't any source left to process
             if (empty($source)) {
                 break;
             }
@@ -91,8 +93,10 @@ class Parser
 
         } while (true === $header);
 
-        // Append the remaining Source Code as T_CONTENT
-        $tokens[] = array(self::T_CONTENT, $source, $lineNumber);
+        if (!empty($source)) {
+            // Append the remaining Source Code as T_CONTENT
+            $tokens[] = array(self::T_CONTENT, $source, $lineNumber);
+        }
         return $tokens;
     }
 }
