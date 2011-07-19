@@ -125,7 +125,7 @@ class DirectiveProcessor implements FilterInterface
 
                 if (!$this->isRegistered($directive)) {
                     throw new \RuntimeException(sprintf(
-                        "Undefined Directive %s in %s on line %d",
+                        "Undefined Directive \"%s\" in %s on line %d",
                         $directive,
                         $asset->getSourceRoot() . DIRECTORY_SEPARATOR . $asset->getSourcePath(),
                         $line

@@ -46,8 +46,8 @@ class Parser
             } else if (self::T_ML_COMMENT_END == substr($line, 0, 2)) {
                 $tokens[] = array(self::T_ML_COMMENT_END, $line, $lineNumber);
 
-            // Save T_COMMENT, T_ALT_COMMENT and T_ML_COMMENT for later
-            // inspection for directives
+            // T_COMMENT, T_ALT_COMMENT and T_ML_COMMENT can contain
+            // directives so store them for later inspection
             } else if (self::T_COMMENT == substr($line, 0, 2)) {
                 $comment = array(self::T_COMMENT, $line, $lineNumber);
 
@@ -58,16 +58,16 @@ class Parser
                 $comment = array(self::T_ML_COMMENT, $line, $lineNumber);
 
             // Directives are only picked up before any code.
-            // We are not in the header anymore if something other than 
-            // white space is coming up
-            } else if ('' !== rtrim($line)) {
+            // If anything other than comments and whitespace is coming
+            // up, then we aren't in the header anymore.
+            } else if ('' !== $line) {
                 break;
             }
 
-            // Look for directives in comment bodys
+            // Look for directives in the body of comments 
             if (!empty($comment)) {
                 list ($token, $content, $n) = $comment;
-                $content = ltrim(substr($content, strlen($token)));
+                $content = trim(substr($content, strlen($token)));
 
                 if (!empty($content) and self::T_DIRECTIVE === $content[0]) {
                     $tokens[] = array(self::T_DIRECTIVE, trim(substr($content, 1)), $n);
