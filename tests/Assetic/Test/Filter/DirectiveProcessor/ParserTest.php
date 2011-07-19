@@ -6,13 +6,17 @@ use Assetic\Filter\DirectiveProcessor\Parser;
 
 class ParserTest extends \PHPUnit_Framework_TestCase
 {
+    protected $parser;
+
+    function setUp()
+    {
+        $this->parser = new Parser;
+    }
+
     function testParse()
     {
-        $parser = new Parser(file_get_contents(
-            __DIR__ . "/../fixtures/directiveprocessor/test1.js"
-        ));
-
-        $tokens = $parser->parse();
+        $source = file_get_contents(__DIR__ . "/../fixtures/directiveprocessor/test1.js");
+        $tokens = $this->parser->parse($source);
 
         $this->assertEquals(6, count($tokens));
 

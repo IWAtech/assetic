@@ -12,7 +12,10 @@ namespace Assetic\Filter;
 
 use Assetic\Asset\AssetInterface,
     Assetic\Asset\FileAsset,
-    Assetic\Factory\AssetFactory;
+    Assetic\Factory\AssetFactory,
+    Assetic\Filter\DirectiveProcessor\Parser,
+    Assetic\Filter\DirectiveProcessor\Directive,
+    Assetic\Filter\DirectiveProcessor\RequireDirective;
 
 /**
  * A Filter which processes special directive comments.
@@ -40,109 +43,113 @@ use Assetic\Asset\AssetInterface,
 class DirectiveProcessor implements FilterInterface
 {
     /**
-     * Matches the File's first comments
-     * @const string
+     * @var \Assetic\Filter\DirectiveProcessor\Parser
      */
-    const HEADER_PATTERN = '/
-        \A (
-            (?m:\s*) (
-              (\/\* (?m:.*?) \*\/) |
-              (\#\#\# (?m:.*?) \#\#\#) |
-              (\/\/ .* \n?)+ |
-              (\# .* \n?)+
-            )
-        )+
-    /x';
+    protected $parser;
 
     /**
-     * Matches the directive itself
+     * Map of available directives
+     * @var array
      */
-    const DIRECTIVE_PATTERN = "/
-        ^ [\W]* = \s* (\w+.*?) (\*\/)? $
-    /x";
+    protected $directives;
 
-    protected $includedFiles = array();
-    protected $cwd;
+    /**
+     * List of processed files, to avoid following circular references
+     * @var array
+     */
+    protected $processed = array();
+
+    function __construct(Parser $parser = null)
+    {
+        if (null === $parser) {
+            $parser = new Parser;
+        }
+        $this->parser = $parser;
+
+        $this->register(new RequireDirective);
+    }
+
+    /**
+     * Checks if the Directive is registered
+     *
+     * @param string $name
+     * @return bool
+     */
+    function isRegistered($name)
+    {
+        return isset($this->directives[$name]);
+    }
+
+    /**
+     * Register a directive
+     *
+     * @param Directive $directive
+     * @return DirectiveProcessor
+     */
+    function register(Directive $directive)
+    {
+        $name = $directive->getName();
+
+        if (empty($name)) {
+            throw new \UnexpectedValueException(sprintf(
+                "No Name found for Directive %s, please return the Name with the
+                Directive's getName() Method",
+                get_class($directive)
+            ));
+        }
+
+        $directive->setProcessor($this);
+        $this->directives[$name] = $directive;
+
+        return $this;
+    }
 
     function filterDump(AssetInterface $asset)
     {}
     
     function filterLoad(AssetInterface $asset)
     {
-        $this->includedFiles = array();
-        $this->cwd = $asset->getSourceRoot();
+        $tokens = $this->parser->parse($asset->getContent());
+        $newContent = '';
 
-        $source = $asset->getContent();
-        
-        $count = preg_match(self::HEADER_PATTERN, $source, $matches);
-        $header = $count ? $matches[0] : '';
+        foreach ($tokens as $token) {
+            list($type, $content, $line) = $token;
 
-        $directives = $this->parseDirectives($header);
-        $this->processDirectives($directives);
+            if ($type !== Parser::T_DIRECTIVE) {
+                $newContent .= $content . "\n";
 
-        $newSource = '';
+            } else {
+                // TODO: Split by Shell Argument Rules
+                $argv = explode(' ', $content);
+                $directive = array_shift($argv);
 
-        print_r($this->includedFiles);
-	foreach ($this->includedFiles as $path) {
-	    var_dump($this->cwd);
-	    $path = realpath($this->cwd . DIRECTORY_SEPARATOR . $path);
+                if (!$this->isRegistered($directive)) {
+                    throw new \RuntimeException(sprintf(
+                        "Undefined Directive %s in %s on line %d",
+                        $directive,
+                        $asset->getSourceRoot() . DIRECTORY_SEPARATOR . $asset->getSourcePath(),
+                        $line
+                    ));
+                }
 
-            $file = new FileAsset($path, $asset->getFilters());
-            $file->load();
-            $newSource .= $file->getContent();
-        }
-        $newSource .= $source;
-        $asset->setContent($newSource);
-    }
+                $directiveInstance = $this->directives[$directive];
+                $filteredAsset = $directiveInstance->execute($asset, $argv);
 
-    protected function processRequireDirective($path)
-    {
-        if (!$this->isRelative($path)) {
-            $path = './' . $path;
-        }
-
-        if (!in_array($path, $this->includedFiles)) {
-            $this->includedFiles[] = $path;
-        }
-    }
-
-    protected function processDirectives(array $directives)
-    {
-        foreach ($directives as $directive) {
-            $i    = $directive[0];
-            $cmd  = $directive[1];
-            $args = array_slice($directive, 2);
-
-            $method = ucwords(str_replace('_', ' ', strtolower($cmd)));
-            $method = "process" . str_replace(' ', '', $method) . "Directive";
-
-            if (!is_callable(array($this, $method))) {
-                throw new \RuntimeException("Directive $cmd is not defined");
+                if ($filteredAsset instanceof AssetInterface) {
+                    $filteredAsset->load();
+                    $newContent .= $filteredAsset->getContent() . "\n";
+                }
             }
-
-            call_user_func_array(array($this, $method), $args);
         }
+        $this->processed[] = $asset->getSourceRoot() . '/' . $asset->getSourcePath();
+        $asset->setContent($newContent);
     }
 
-    protected function parseDirectives($header)
+    /**
+     * Checks if the source file has been processed
+     */
+    function hasProcessed($sourceFile)
     {
-        $directives = array();
-        $index = 0;
-
-        foreach (explode("\n", $header) as $line) {
-            if (!preg_match(self::DIRECTIVE_PATTERN, $line, $matches)) {
-                continue;
-            }
-            $directives[] = array_merge(array(++$index), explode(' ', $matches[1]));
-        }
-        return $directives;
-    }
-
-    protected function isRelative($path)
-    {
-        if (preg_match('/^\.(\/|\\\\).+/', $path)) {
-            return true;
-        }
-        return false;
+        return in_array($sourceFile, $this->processed);
     }
 }
