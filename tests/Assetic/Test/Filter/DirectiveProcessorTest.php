@@ -36,8 +36,6 @@ class DirectiveProcessorTest extends \PHPUnit_Framework_TestCase
 
     function test()
     {
-        $this->asset->load();
-
         $content = <<<JAVASCRIPT
 // file bar.js
 var foo = "bar";
@@ -56,7 +54,7 @@ var foo = function() {
 JAVASCRIPT;
 
 
-        echo $this->asset->getContent();
-        $this->assertEquals($content, $this->asset->getContent());
+        echo $this->asset->dump();
+        $this->assertEquals($content, $this->asset->dump());
     }
 }

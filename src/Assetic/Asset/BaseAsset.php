@@ -100,19 +100,16 @@ abstract class BaseAsset implements AssetInterface
             $filter->ensure($additionalFilter);
         }
 
-        $this->getDependencies()->load();
-        $content = $this->getDependencies()->getContent() . $content;
-
         $asset = clone $this;
         $asset->setContent($content);
 
         $filter->filterLoad($asset);
 
-        $asset->getDependencies()->load();
-        $deps = $asset->getDependencies()->getContent();
+        foreach ($asset->getDependencies() as $dep) {
+            $this->addDependency($dep);
+        }
 
-        $this->content = $deps . $asset->getContent();
-
+        $this->content = $asset->getContent();
         $this->loaded = true;
     }
 
@@ -127,7 +124,10 @@ abstract class BaseAsset implements AssetInterface
             $filter->ensure($additionalFilter);
         }
 
+        $this->dependencies->load();
+
         $asset = clone $this;
+        $asset->setContent($this->dependencies->getContent() . $this->getContent());
         $filter->filterDump($asset);
 
         return $asset->getContent();
