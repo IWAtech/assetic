@@ -39,13 +39,12 @@ class DirectiveProcessorTest extends \PHPUnit_Framework_TestCase
         $this->asset->load();
 
         $content = <<<JAVASCRIPT
-// The manifest file
 // file bar.js
 var foo = "bar";
 
 // file foo.js
 var bar = "baz";
-
+// The manifest file
 /**
 * Some multiline comment which isn't modified
 */
@@ -56,6 +55,8 @@ var foo = function() {
 
 JAVASCRIPT;
 
+
+        echo $this->asset->getContent();
         $this->assertEquals($content, $this->asset->getContent());
     }
 }

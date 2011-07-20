@@ -32,6 +32,11 @@ abstract class BaseAsset implements AssetInterface
     private $loaded;
 
     /**
+     * @var AssetCollection
+     */
+    private $dependencies;
+
+    /**
      * Constructor.
      *
      * @param array $filters Filters for the asset
@@ -42,11 +47,29 @@ abstract class BaseAsset implements AssetInterface
         $this->sourceRoot = $sourceRoot;
         $this->sourcePath = $sourcePath;
         $this->loaded = false;
+
+        $this->dependencies = new AssetCollection;
     }
 
     public function __clone()
     {
         $this->filters = clone $this->filters;
+        $this->dependencies = new AssetCollection;
+    }
+
+    public function addDependency(AssetInterface $asset)
+    {
+        $this->dependencies->add($asset);
+    }
+
+    /**
+     * Returns all Dependencies as Asset Collection
+     *
+     * @return AssetCollection
+     */
+    public function getDependencies()
+    {
+        return $this->dependencies;
     }
 
     public function ensureFilter(FilterInterface $filter)
@@ -77,11 +100,18 @@ abstract class BaseAsset implements AssetInterface
             $filter->ensure($additionalFilter);
         }
 
+        $this->getDependencies()->load();
+        $content = $this->getDependencies()->getContent() . $content;
+
         $asset = clone $this;
         $asset->setContent($content);
 
         $filter->filterLoad($asset);
-        $this->content = $asset->getContent();
+
+        $asset->getDependencies()->load();
+        $deps = $asset->getDependencies()->getContent();
+
+        $this->content = $deps . $asset->getContent();
 
         $this->loaded = true;
     }

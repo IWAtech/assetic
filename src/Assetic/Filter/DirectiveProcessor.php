@@ -11,8 +11,7 @@
 namespace Assetic\Filter;
 
 use Assetic\Asset\AssetInterface,
-    Assetic\Asset\FileAsset,
-    Assetic\Factory\AssetFactory,
+    Assetic\Asset\StringAsset,
     Assetic\Filter\DirectiveProcessor\Parser,
     Assetic\Filter\DirectiveProcessor\Directive,
     Assetic\Filter\DirectiveProcessor\RequireDirective;
@@ -110,13 +109,13 @@ class DirectiveProcessor implements FilterInterface
     function filterLoad(AssetInterface $asset)
     {
         $tokens = $this->parser->parse($asset->getContent());
-        $newContent = '';
+        $newSource = '';
 
         foreach ($tokens as $token) {
             list($type, $content, $line) = $token;
 
             if ($type !== Parser::T_DIRECTIVE) {
-                $newContent .= $content . "\n";
+                $newSource .= $content . "\n";
 
             } else {
                 // TODO: Split by Shell Argument Rules
@@ -133,16 +132,12 @@ class DirectiveProcessor implements FilterInterface
                 }
 
                 $directiveInstance = $this->directives[$directive];
-                $filteredAsset = $directiveInstance->execute($asset, $argv);
-
-                if ($filteredAsset instanceof AssetInterface) {
-                    $filteredAsset->load();
-                    $newContent .= $filteredAsset->getContent() . "\n";
-                }
+                $directiveInstance->execute($asset, $argv);
             }
         }
+
         $this->processed[] = $asset->getSourceRoot() . '/' . $asset->getSourcePath();
-        $asset->setContent($newContent);
+        $asset->setContent($newSource);
     }
 
     /**

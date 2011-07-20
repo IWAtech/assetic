@@ -34,7 +34,7 @@ class RequireDirective implements Directive
 
         if (!$this->processor->hasProcessed($requiredFile)) {
             // Required Assets inherit their filters from their parent
-            return new FileAsset($requiredFile, $parent->getFilters());
+            $parent->addDependency(new FileAsset($requiredFile, array($this->processor)));
         }
     }
 }
