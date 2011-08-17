@@ -34,7 +34,7 @@ abstract class BaseAsset implements AssetInterface
     /**
      * @var AssetCollection
      */
-    private $dependencies;
+    protected $dependencies;
 
     /**
      * Constructor.
@@ -127,7 +127,7 @@ abstract class BaseAsset implements AssetInterface
         $this->dependencies->load();
 
         $asset = clone $this;
-        $asset->setContent($this->dependencies->getContent() . $this->getContent());
+        $asset->setContent($this->dependencies->dump() . $this->getContent());
         $filter->filterDump($asset);
 
         return $asset->getContent();

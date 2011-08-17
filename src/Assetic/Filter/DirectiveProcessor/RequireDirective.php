@@ -32,9 +32,14 @@ class RequireDirective implements Directive
 
         $requiredFile = $cwd . '/' . $requiredFile;
 
-        if (!$this->processor->hasProcessed($requiredFile)) {
-            // Required Assets inherit their filters from their parent
-            $parent->addDependency(new FileAsset($requiredFile, array($this->processor)));
-        }
+		if (is_callable(array($parent, 'getDependencies'))) {
+			foreach ($parent->getDependencies() as $asset) {
+				if ($asset->getSourceRoot().'/'.$asset->getSourcePath() == $requiredFile) {
+					return;
+				}
+			}
+		}
+		
+		$parent->addDependency(new FileAsset($requiredFile, array($this->processor)));
     }
 }

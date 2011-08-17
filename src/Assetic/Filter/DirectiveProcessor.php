@@ -52,12 +52,6 @@ class DirectiveProcessor implements FilterInterface
      */
     protected $directives;
 
-    /**
-     * List of processed files, to avoid following circular references
-     * @var array
-     */
-    protected $processed = array();
-
     function __construct(Parser $parser = null)
     {
         if (null === $parser) {
@@ -136,15 +130,6 @@ class DirectiveProcessor implements FilterInterface
             }
         }
 
-        $this->processed[] = $asset->getSourceRoot() . '/' . $asset->getSourcePath();
         $asset->setContent($newSource);
-    }
-
-    /**
-     * Checks if the source file has been processed
-     */
-    function hasProcessed($sourceFile)
-    {
-        return in_array($sourceFile, $this->processed);
     }
 }
