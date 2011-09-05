@@ -105,6 +105,26 @@ class AssetCache implements AssetInterface
         return $this->asset->getLastModified();
     }
 
+    public function getDependencies()
+    {
+        return $this->asset->getDependencies();
+    }
+
+    public function getRequiredDependencies()
+    {
+        return $this->asset->getRequiredDependencies();
+    }
+
+    public function addDependency(AssetInterface $asset)
+    {
+        return $this->asset->addDependency($asset);
+    }
+
+    public function addRequiredDependency(AssetInterface $asset)
+    {
+        return $this->asset->addRequiredDependency($asset);
+    }
+
     /**
      * Returns a cache key for the current asset.
      *

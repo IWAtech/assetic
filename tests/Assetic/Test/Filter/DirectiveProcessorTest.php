@@ -34,7 +34,7 @@ class DirectiveProcessorTest extends \PHPUnit_Framework_TestCase
         $this->asset->ensureFilter($this->processor);
     }
 
-    function test()
+    function testRequire()
     {
         $content = <<<JAVASCRIPT
 // file bar.js
@@ -53,8 +53,17 @@ var foo = function() {
 
 JAVASCRIPT;
 
-
-        echo $this->asset->dump();
         $this->assertEquals($content, $this->asset->dump());
+    }
+
+    function testDependOn()
+    {
+        $mtime = time();
+
+        $this->asset->load();
+
+        touch(__DIR__.'/fixtures/directiveprocessor/test/dependency.js', $mtime);
+
+        $this->assertEquals($mtime, $this->asset->getLastModified());
     }
 }

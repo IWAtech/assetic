@@ -14,6 +14,7 @@ use Assetic\Asset\AssetInterface,
     Assetic\Asset\StringAsset,
     Assetic\Filter\DirectiveProcessor\Parser,
     Assetic\Filter\DirectiveProcessor\Directive,
+    Assetic\Filter\DirectiveProcessor\DependOnDirective,
     Assetic\Filter\DirectiveProcessor\RequireDirective;
 
 /**
@@ -35,7 +36,7 @@ use Assetic\Asset\AssetInterface,
  *   * /
  * ( ^ This space must be here, otherwise PHP triggers an Parse Error)
  *
- * Directives must be in the Header of the Source File to be picked up.
+ * Directives must be in the Header of the Source File for getting picked up.
  *
  * @author Christoph Hochstrasser <christoph.hochstrasser@gmail.com>
  */
@@ -60,6 +61,7 @@ class DirectiveProcessor implements FilterInterface
         $this->parser = $parser;
 
         $this->register(new RequireDirective);
+        $this->register(new DependOnDirective);
     }
 
     /**

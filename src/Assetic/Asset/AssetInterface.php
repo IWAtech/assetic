@@ -132,4 +132,23 @@ interface AssetInterface
      * @return integer|null A UNIX timestamp
      */
     function getLastModified();
+
+    /**
+     * Returns dependencies which affect this asset's Last Modified time
+     *
+     * @return AssetCollectionInterface
+     */
+    function getDependencies();
+
+    /**
+     * Returns dependencies which get concatenated with this asset's 
+     * content.
+     *
+     * @return AssetCollectionInterface
+     */
+    function getRequiredDependencies();
+
+    function addDependency(AssetInterface $asset);
+
+    function addRequiredDependency(AssetInterface $asset);
 }

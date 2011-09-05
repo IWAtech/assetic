@@ -59,6 +59,10 @@ class FileAsset extends BaseAsset
 
     public function getLastModified()
     {
-        return filemtime($this->source);
+        return max(
+            filemtime($this->source),
+            $this->getDependencies()->getLastModified(),
+            $this->getRequiredDependencies()->getLastModified()
+        );
     }
 }

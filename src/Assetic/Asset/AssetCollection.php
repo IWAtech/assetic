@@ -191,4 +191,20 @@ class AssetCollection implements \IteratorAggregate, AssetCollectionInterface
     {
         return new \RecursiveIteratorIterator(new AssetCollectionFilterIterator(new AssetCollectionIterator($this, $this->clones)));
     }
+
+    public function getDependencies()
+    {
+    }
+
+    public function getRequiredDependencies()
+    {
+    }
+
+    public function addDependency(AssetInterface $asset)
+    {
+    }
+
+    public function addRequiredDependency(AssetInterface $asset)
+    {
+    }
 }

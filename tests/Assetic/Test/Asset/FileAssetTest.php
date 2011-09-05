@@ -61,4 +61,16 @@ class FileAssetTest extends \PHPUnit_Framework_TestCase
 
         $asset = new FileAsset(__FILE__, array(), __DIR__.'/foo');
     }
+
+    public function testDependenciesAffectLastModified()
+    {
+        $asset = new FileAsset(__FILE__);
+        $asset->addDependency(new FileAsset(__DIR__.'/fixtures/testfile.txt'));
+
+        $mtime = time();
+
+        touch(__DIR__.'/fixtures/testfile.txt', $mtime);
+
+        $this->assertEquals($mtime, $asset->getLastModified());
+    }
 }

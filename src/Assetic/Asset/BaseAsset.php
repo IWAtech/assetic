@@ -32,9 +32,22 @@ abstract class BaseAsset implements AssetInterface
     private $loaded;
 
     /**
+     * This dependencies are only checked on their
+     * Last Modified Time and get not concatenated with
+     * the Asset's content.
+     *
+     * Use this if you have no control over file including
+     * in an external Parser (e.g. LESS,...)
+     *
      * @var AssetCollection
      */
     protected $dependencies;
+
+    /**
+     * Dependencies which get dumped before the asset's content
+     * @var AssetCollection
+     */
+    protected $required;
 
     /**
      * Constructor.
@@ -49,17 +62,24 @@ abstract class BaseAsset implements AssetInterface
         $this->loaded = false;
 
         $this->dependencies = new AssetCollection;
+        $this->required = new AssetCollection;
     }
 
     public function __clone()
     {
         $this->filters = clone $this->filters;
         $this->dependencies = new AssetCollection;
+        $this->required = new AssetCollection;
     }
 
     public function addDependency(AssetInterface $asset)
     {
         $this->dependencies->add($asset);
+    }
+
+    public function addRequiredDependency(AssetInterface $asset)
+    {
+        $this->required->add($asset);
     }
 
     /**
@@ -70,6 +90,11 @@ abstract class BaseAsset implements AssetInterface
     public function getDependencies()
     {
         return $this->dependencies;
+    }
+
+    public function getRequiredDependencies()
+    {
+        return $this->required;
     }
 
     public function ensureFilter(FilterInterface $filter)
@@ -109,6 +134,10 @@ abstract class BaseAsset implements AssetInterface
             $this->addDependency($dep);
         }
 
+        foreach ($asset->getRequiredDependencies() as $dep) {
+            $this->addRequiredDependency($dep);
+        }
+
         $this->content = $asset->getContent();
         $this->loaded = true;
     }
@@ -124,10 +153,10 @@ abstract class BaseAsset implements AssetInterface
             $filter->ensure($additionalFilter);
         }
 
-        $this->dependencies->load();
+        $this->required->load();
 
         $asset = clone $this;
-        $asset->setContent($this->dependencies->dump() . $this->getContent());
+        $asset->setContent($this->required->dump().$this->getContent());
         $filter->filterDump($asset);
 
         return $asset->getContent();

@@ -6,13 +6,13 @@ use Assetic\Filter\DirectiveProcessor,
     Assetic\Asset\AssetInterface,
     Assetic\Asset\FileAsset;
 
-class RequireDirective implements Directive
+class DependOnDirective implements Directive
 {
     protected $processor;
 
     function getName()
     {
-        return "require";
+        return "depend_on";
     }
 
     function setProcessor(DirectiveProcessor $processor)
@@ -31,7 +31,7 @@ class RequireDirective implements Directive
         }
 
         $requiredFile = "$cwd/$requiredFile";
-        $parent->addRequiredDependency(
+        $parent->addDependency(
             new FileAsset($requiredFile, array($this->processor))
         );
     }
