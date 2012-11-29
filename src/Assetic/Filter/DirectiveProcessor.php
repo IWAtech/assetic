@@ -118,17 +118,10 @@ class DirectiveProcessor implements FilterInterface
                 $argv = explode(' ', $content);
                 $directive = array_shift($argv);
 
-                if (!$this->isRegistered($directive)) {
-                    throw new \RuntimeException(sprintf(
-                        "Undefined Directive \"%s\" in %s on line %d",
-                        $directive,
-                        $asset->getSourceRoot() . DIRECTORY_SEPARATOR . $asset->getSourcePath(),
-                        $line
-                    ));
+                if ($this->isRegistered($directive)) {
+					$directiveInstance = $this->directives[$directive];
+					$directiveInstance->execute($asset, $argv);
                 }
-
-                $directiveInstance = $this->directives[$directive];
-                $directiveInstance->execute($asset, $argv);
             }
         }
 
